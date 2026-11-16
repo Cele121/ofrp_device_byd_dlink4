@@ -1,18 +1,27 @@
 LOCAL_PATH := device/byd/dilink4
 
-# 与实测可用的 v6 镜像完全一致: 两个 fstab 分工, 缺一不可。
-#   recovery.fstab -> AOSP 风格(含 logical 逻辑分区), TWRP 主解析器用
-#   twrp.fstab     -> TWRP 风格(display=/backup=/flashimg= 标志 + 显式 mapper 设备)
-# TWRP 会依次 Process_Fstab("/etc/recovery.fstab",1) 和 ("/etc/twrp.fstab",2)。
-# system-as-root 下 /etc == /system/etc, 两处都装。
+# ============ fstab 两个文件, 分工不同 ============
+#
+# 1) recovery.fstab -> build/make 自动安装到 /system/etc/recovery.fstab
+#    (它只认 $(TARGET_DEVICE_DIR)/recovery.fstab, 不需要我们写拷贝规则)
+#    AOSP 格式, 负责 logical 逻辑分区映射 + 各分区设备路径。
+#
+# 2) twrp.flags -> TWRP 真正的标志文件
+#    TWRP 12.1 partitionmanager.cpp:
+#        fstabFile = fopen("/etc/twrp.flags", "rt");
+#    不是 twrp.fstab! 名字写错 -> display=/backup=/flashimg= 全失效,
+#    表现为备份页列不出分区、无法从 UI 刷 img。
+#
+# ★ 绝不能装到 recovery/root/etc/ 或 recovery/root/vendor/:
+#   本机 system-as-root, 构建时 rsync 同步 out/.../root 到 recovery/root,
+#   源目录 etc/vendor 是符号链接; 若提前建成真实目录, rsync 报
+#   "cannot delete non-empty directory: root/etc" 直接失败。
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/recovery.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/recovery.fstab \
-    $(LOCAL_PATH)/recovery.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/etc/recovery.fstab \
-    $(LOCAL_PATH)/twrp.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/twrp.fstab \
-    $(LOCAL_PATH)/twrp.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/etc/twrp.fstab
+    $(LOCAL_PATH)/twrp.flags:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/twrp.flags
 
-# f2fs 用户态工具 (prebuilt, 模块定义见 device/byd/dilink4/Android.mk)
-# 缺它们时: /data 能挂载(靠内核驱动), 但无法 fsck 修复 / 格式化 f2fs
+# ============ f2fs 用户态工具 ============
+# 模块定义见 device/byd/dilink4/Android.mk (prebuilt, 取自实测可用的 v6 镜像)
+# 缺它们时 /data 仍能挂载(靠内核 f2fs 驱动), 但无法 fsck 修复 / 格式化
 PRODUCT_PACKAGES += \
     fsck.f2fs \
     make_f2fs
