@@ -216,6 +216,18 @@ jobs:
         lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make clean && mka adbd ${{ inputs.BUILD_TARGET }}image
         fi
 
+    - name: Verify recovery image exists
+      run: |
+        set -e
+        OUT=OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}
+        echo "--- $OUT ---"; ls -l "$OUT" | head -40 || true
+        if ! ls "$OUT"/OrangeFox*.img >/dev/null 2>&1; then
+          echo "::error::recovery image NOT produced - OFRP packaged an empty zip. Check BUILDING_RECOVERY_IMAGE."
+          exit 1
+        fi
+        md5sum "$OUT"/OrangeFox*.img
+        stat -c '%n %s bytes' "$OUT"/OrangeFox*.img
+
     - name: Set Release Properties
       run: |
         echo "BUILD_DATE=$(TZ=Asia/Shanghai date +%Y%m%d)" >> $GITHUB_ENV
