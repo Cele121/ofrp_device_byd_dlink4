@@ -1,0 +1,29 @@
+# TWRP 运行时分区标志 -- BYD DiLink 4.0 (lito/SM6350)
+#
+# 重要: TWRP 12.1 源码 partitionmanager.cpp 里读的是
+#     fopen("/etc/twrp.flags", "rt")
+# 不是 /etc/twrp.fstab。装错名字 -> display=/backup=/flashimg= 全部失效。
+#
+# 这里只放 TWRP 专用标志。分区定义(logical/system 等)在 recovery.fstab 里,
+# TWRP 先解析 recovery.fstab, 再把本文件里"尚不存在"的条目追加进去。
+
+/data         f2fs   /dev/block/by-name/userdata     flags=display="Data";backup=1;wipeingui
+/metadata     ext4   /dev/block/by-name/metadata     flags=display="Metadata";formattable;backup=1
+/persist      ext4   /dev/block/by-name/persist      flags=display="Persist";backup=1
+
+/boot         emmc   /dev/block/by-name/boot_a       flags=display="Boot";backup=1;flashimg=1
+/recovery     emmc   /dev/block/by-name/recovery_a   flags=display="Recovery";backup=1;flashimg=1
+/dtbo         emmc   /dev/block/by-name/dtbo_a       flags=display="DTBO";backup=1;flashimg=1
+/vbmeta       emmc   /dev/block/by-name/vbmeta_a     flags=display="VBMeta";backup=1;flashimg=1
+
+/modem        emmc   /dev/block/by-name/modem_a      flags=display="Modem";backup=1;flashimg=1
+/efs1         emmc   /dev/block/by-name/modemst1     flags=display="EFS1";backup=1;flashimg=1
+/efs2         emmc   /dev/block/by-name/modemst2     flags=display="EFS2";backup=1;flashimg=1
+/fsg          emmc   /dev/block/by-name/fsg          flags=display="FSG";backup=1;flashimg=1
+/fsc          emmc   /dev/block/by-name/fsc          flags=display="FSC";backup=1;flashimg=1
+/splash       emmc   /dev/block/by-name/splash       flags=display="Splash";backup=1;flashimg=1
+/bluetooth    emmc   /dev/block/by-name/bluetooth_a  flags=display="Bluetooth";backup=1;flashimg=1
+/misc         emmc   /dev/block/by-name/misc         flags=display="Misc"
+
+# USB 读卡器: 实测插卡时枚举为 sdg1, vfat 需 iocharset=utf8 才能正常显示中文名
+/usb_otg      vfat   /dev/block/sdg1                 flags=display="USB-OTG";storage;wipeingui;removable;fsflags="iocharset=utf8"
