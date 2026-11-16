@@ -205,13 +205,17 @@ jobs:
         # ---- 4.19 内核 functionfs 空指针崩溃 -> 摘掉 init.rc 里两处 mount ----
         # 实测 ffs_fs_mount() 会写 NULL+0x150, 崩 PID 1 -> kernel panic, recovery 起不来。
         # 原厂/移植版都用 "# [byd]" 注释掉这两行, 这里做同样处理。
-        INITRC=system/core/rootdir/init.rc
-        sed -i -E 's|^([[:space:]]*)mount functionfs |\1# [byd] mount functionfs |' $INITRC
-        echo "--- init.rc 中 functionfs 相关行 ---"
-        grep -n "functionfs" $INITRC || true
-        if grep -qE '^[[:space:]]*mount functionfs' $INITRC; then
-          echo "::error::functionfs still active in init.rc"; exit 1
-        fi
+        # 真正生效的 recovery init.rc 是 bootable/recovery/etc/init.rc
+        # (AOSP 的 system/core/rootdir/init.rc 里根本没有这两行 — run#13 实测证明改那个无效)
+        for INITRC in bootable/recovery/etc/init.rc system/core/rootdir/init.rc; do
+          [ -f "$INITRC" ] || continue
+          sed -i -E 's|^([[:space:]]*)mount functionfs |\1# [byd] mount functionfs |' $INITRC
+          echo "--- $INITRC ---"
+          grep -n "functionfs" $INITRC || true
+          if grep -qE '^[[:space:]]*mount functionfs' $INITRC; then
+            echo "::error::functionfs still active in $INITRC"; exit 1
+          fi
+        done
         echo "patch step OK: $(git log --oneline -1)"
 
     - name: Add WLAN support For 14.1 Branch
