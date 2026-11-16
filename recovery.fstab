@@ -1,17 +1,16 @@
-# AOSP fstab -- BYD DiLink 4.0
-# 逻辑分区: 源字段必须是裸名(system/vendor/product), 否则 TWRP 的
-# Is_Super_Partition() 匹配不到, liblp 不会得到 logical 标记 -> unable to update logical partition
+# AOSP fstab (recovery binary 用) -- BYD DiLink 4.0
+# 动态分区: 源字段写裸名, 这样 TWRP 的 Is_Super_Partition() 才能匹配
 system      /system      ext4   ro,barrier=1,discard   wait,slotselect,logical
 vendor      /vendor      ext4   ro,barrier=1,discard   wait,slotselect,logical
 product     /product     ext4   ro,barrier=1,discard   wait,slotselect,logical
+odm         /odm         ext4   ro,barrier=1,discard   wait,slotselect,logical
 
-# /data 未加密 -> 绝对不能写 encryptable=footer
-/dev/block/by-name/userdata    /data      f2fs  noatime,nosuid,nodev,discard  wait,check
-/dev/block/by-name/metadata    /metadata  ext4  noatime,nosuid,nodev,discard  wait,formattable
-/dev/block/by-name/persist     /persist   ext4  noatime,nosuid,nodev,discard  wait
+/dev/block/by-name/userdata   /data      f2fs  noatime,nosuid,nodev,discard  wait,check
+/dev/block/by-name/metadata   /metadata  ext4  noatime,nosuid,nodev,discard  wait,formattable
+/dev/block/by-name/persist    /persist   ext4  noatime,nosuid,nodev,discard  wait
 
-/dev/block/by-name/boot_a      /boot      emmc  defaults  wait
-/dev/block/by-name/recovery_a  /recovery  emmc  defaults  wait
-/dev/block/by-name/dtbo_a      /dtbo      emmc  defaults  wait
-/dev/block/by-name/vbmeta_a    /vbmeta    emmc  defaults  wait
-/dev/block/by-name/misc        /misc      emmc  defaults  wait
+/dev/block/by-name/boot_a       /boot      emmc  defaults  wait
+/dev/block/by-name/recovery_a   /recovery  emmc  defaults  wait
+/dev/block/by-name/dtbo_a       /dtbo      emmc  defaults  wait
+/dev/block/by-name/vbmeta_a     /vbmeta    emmc  defaults  wait
+/dev/block/by-name/misc         /misc      emmc  defaults  wait
