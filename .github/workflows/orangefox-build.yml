@@ -143,7 +143,30 @@ jobs:
       if: inputs.MANIFEST_BRANCH == '12.1'
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/bootable/recovery
-        git remote add ymdzq https://github.com/ymdzq/OrangeFox_Recovery && git fetch ymdzq fox_12.1 && git merge --no-ff ymdzq/fox_12.1 -m "Apply custom patches"
+        git config user.email "ci@local" && git config user.name "ci"
+        git remote remove ymdzq 2>/dev/null || true
+        git remote add ymdzq https://github.com/ymdzq/OrangeFox_Recovery
+        git fetch ymdzq fox_12.1
+        # 该分支提供中文汉化与挂载修复；上游已分叉，冲突按类型处理：
+        #   *.xml -> 取对方（汉化/主题修正在这里）
+        #   *.cpp/*.h* -> 保留上游（分区逻辑用最新版，不吃旧 fork）
+        if ! git merge --no-ff ymdzq/fox_12.1 -m "Apply custom patches"; then
+          echo "::warning::merge conflicts detected, resolving by file type"
+          git checkout --theirs -- '*.xml' 2>/dev/null || true
+          git checkout --ours   -- '*.cpp' '*.hpp' '*.h' 2>/dev/null || true
+          # 其余未解决项（含 modify/delete）统一取对方版本
+          git ls-files -u | awk '{print $4}' | sort -u | while read -r f; do
+            [ -z "$f" ] && continue
+            git checkout --theirs -- "$f" 2>/dev/null || git checkout ymdzq/fox_12.1 -- "$f" 2>/dev/null || git rm -q --cached --ignore-unmatch "$f" || true
+          done
+          git add -A
+          git commit -m "Apply custom patches (xml=theirs, cpp=ours)" || true
+        fi
+        # 校验：不允许残留冲突标记
+        if grep -rIl -E '^(<<<<<<< |>>>>>>> )' --include='*.cpp' --include='*.h' --include='*.hpp' --include='*.xml' . ; then
+          echo "::error::conflict markers still present"; exit 1
+        fi
+        echo "patch step OK: $(git log --oneline -1)"
         if [ "${{ inputs.ADD_WLAN_SUPPORT }}" = "true" ]; then
         wget "https://github.com/ymdzq/OrangeFox_Recovery/commit/f8712872b9ec663b658a1e8eba4840877fe45ea6.patch" -O wlan.patch
         git am wlan.patch
