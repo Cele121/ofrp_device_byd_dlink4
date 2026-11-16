@@ -10,3 +10,9 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/recovery.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/etc/recovery.fstab \
     $(LOCAL_PATH)/twrp.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/twrp.fstab \
     $(LOCAL_PATH)/twrp.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/etc/twrp.fstab
+
+# f2fs 用户态工具 (prebuilt, 模块定义见 device/byd/dilink4/Android.mk)
+# 缺它们时: /data 能挂载(靠内核驱动), 但无法 fsck 修复 / 格式化 f2fs
+PRODUCT_PACKAGES += \
+    fsck.f2fs \
+    make_f2fs
