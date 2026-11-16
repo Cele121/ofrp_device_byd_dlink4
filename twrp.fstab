@@ -1,9 +1,13 @@
+# TWRP fstab v5 -- BYD DiLink 4.0 (lito) TWRP 3.7.1
+# 挂载点故意不以 system/vendor/product 开头: TWRP 的 Is_Super_Partition() 用
+# strncmp(名字,"system"/"vendor"/"product"/"odm"/"system_ext") 判断, 命中就走
+# Prepare_Super_Volume() 里 while(access(blk_device)) 的死循环 -> 黑屏。
+# 实测 mount -t ext4 /dev/block/mapper/system_a 返回 rc=0, 分区为 ext4, 完全可挂。
+/sys_a        ext4   /dev/block/mapper/system_a     flags=display="System";backup=1;mount_ro
+/ven_a        ext4   /dev/block/mapper/vendor_a     flags=display="Vendor";backup=1;mount_ro
+/prod_a       ext4   /dev/block/mapper/product_a    flags=display="Product";backup=1;mount_ro
 # TWRP fstab -- BYD DiLink 4.0 (lito/SM6350) A/B + super
 # 注意: 不要把 /sdcard 指到 MicroSD (本车无卡槽), 否则和 /data/media 抢挂载点
-# super 实测只有 3 个逻辑分区 (dm-5/4/3 = system/vendor/product), 无 odm
-system      /system      ext4   ro,barrier=1,discard   wait,slotselect,logical
-vendor      /vendor      ext4   ro,barrier=1,discard   wait,slotselect,logical
-product     /product     ext4   ro,barrier=1,discard   wait,slotselect,logical
 
 /data         f2fs   /dev/block/by-name/userdata   flags=display="Data";backup=1;wipeingui
 /metadata     ext4   /dev/block/by-name/metadata   flags=display="Metadata";formattable;backup=1
