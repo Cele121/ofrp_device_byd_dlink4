@@ -1,12 +1,16 @@
 LOCAL_PATH := device/byd/dilink4
 
-# 与实测可用的 v6 镜像完全一致: 两个 fstab 分工, 缺一不可。
-#   recovery.fstab -> AOSP 风格(含 logical 逻辑分区), TWRP 主解析器用
-#   twrp.fstab     -> TWRP 风格(display=/backup=/flashimg= 标志 + 显式 mapper 设备)
-# TWRP 会依次 Process_Fstab("/etc/recovery.fstab",1) 和 ("/etc/twrp.fstab",2)。
-# system-as-root 下 /etc == /system/etc, 两处都装。
+# 与实测可用的 v6 镜像保持完全一致。
+#
+# 关键教训(run#7): 绝不能把文件装到 recovery/root/etc/ 或 recovery/root/vendor/。
+# 本机是 system-as-root 布局, 构建时 rsync 要把 out/.../root 同步到 recovery/root,
+# 而源目录里的 etc、vendor 是符号链接(指向 /system/...)。若我们提前在这些位置
+# 创建了真实目录, rsync 会用
+#   could not make way for new symlink: root/etc
+#   cannot delete non-empty directory: root/etc
+# 直接失败(code 23), 整个构建在 99% 处中断。
+#
+# recovery.fstab 由 build/make 自动拷贝(它只看 $(TARGET_DEVICE_DIR)/recovery.fstab),
+# 所以这里只需要处理 twrp.fstab。
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/recovery.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/recovery.fstab \
-    $(LOCAL_PATH)/recovery.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/etc/recovery.fstab \
-    $(LOCAL_PATH)/twrp.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/twrp.fstab \
-    $(LOCAL_PATH)/twrp.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/etc/twrp.fstab
+    $(LOCAL_PATH)/twrp.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/twrp.fstab
