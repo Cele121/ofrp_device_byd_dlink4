@@ -171,8 +171,16 @@ jobs:
         # 不补它 -> 镜像里 /twres/landscape.xml 缺失 -> 界面加载不出页面。
         git checkout FETCH_HEAD -- gui/theme/common/landscape.xml
         git add gui/theme/common/landscape.xml
+        # ui.xml 还引用 DroidSansMono.ttf 与 RobotoCondensed-Regular.ttf。
+        # fork 把 common/fonts 整个换成了自己的 Fox 字体集(FiraCode/Exo2/...),
+        # 这两个官方字体不存在 -> TWRP 加载字体失败 -> 文字渲染不出来(只有图没有字)。
+        git checkout FETCH_HEAD -- gui/theme/common/fonts/DroidSansMono.ttf
+        git checkout FETCH_HEAD -- gui/theme/common/fonts/RobotoCondensed-Regular.ttf
+        git add gui/theme/common/fonts
         git commit -m "restore landscape_hdpi + common/landscape.xml (dropped by ofrp fork)" || true
-        for f in gui/theme/landscape_hdpi/ui.xml gui/theme/common/landscape.xml; do
+        for f in gui/theme/landscape_hdpi/ui.xml gui/theme/common/landscape.xml \
+                 gui/theme/common/fonts/DroidSansMono.ttf \
+                 gui/theme/common/fonts/RobotoCondensed-Regular.ttf; do
           if [ ! -f "$f" ]; then echo "::error::missing $f"; exit 1; fi
         done
         echo "restored: landscape_hdpi $(find gui/theme/landscape_hdpi -type f | wc -l) files, common/landscape.xml $(wc -c < gui/theme/common/landscape.xml) bytes"
@@ -194,6 +202,16 @@ jobs:
         echo "--- rsync 行已打补丁 ---"
         grep -n 'exclude=root/vendor' build/make/core/Makefile
         test $(grep -c 'exclude=root/vendor' build/make/core/Makefile) -ge 1 || { echo "::error::rsync patch failed"; exit 1; }
+        # ---- 4.19 内核 functionfs 空指针崩溃 -> 摘掉 init.rc 里两处 mount ----
+        # 实测 ffs_fs_mount() 会写 NULL+0x150, 崩 PID 1 -> kernel panic, recovery 起不来。
+        # 原厂/移植版都用 "# [byd]" 注释掉这两行, 这里做同样处理。
+        INITRC=system/core/rootdir/init.rc
+        sed -i -E 's|^([[:space:]]*)mount functionfs |\1# [byd] mount functionfs |' $INITRC
+        echo "--- init.rc 中 functionfs 相关行 ---"
+        grep -n "functionfs" $INITRC || true
+        if grep -qE '^[[:space:]]*mount functionfs' $INITRC; then
+          echo "::error::functionfs still active in init.rc"; exit 1
+        fi
         echo "patch step OK: $(git log --oneline -1)"
 
     - name: Add WLAN support For 14.1 Branch
