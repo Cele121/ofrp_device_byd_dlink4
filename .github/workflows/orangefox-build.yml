@@ -154,7 +154,6 @@ jobs:
           echo "::warning::merge conflicts detected, resolving by file type"
           git checkout --theirs -- '*.xml' 2>/dev/null || true
           git checkout --ours   -- '*.cpp' '*.hpp' '*.h' 2>/dev/null || true
-          # 其余未解决项（含 modify/delete）统一取对方版本
           git ls-files -u | awk '{print $4}' | sort -u | while read -r f; do
             [ -z "$f" ] && continue
             git checkout --theirs -- "$f" 2>/dev/null || git checkout ymdzq/fox_12.1 -- "$f" 2>/dev/null || git rm -q --cached --ignore-unmatch "$f" || true
@@ -162,17 +161,21 @@ jobs:
           git add -A
           git commit -m "Apply custom patches (xml=theirs, cpp=ours)" || true
         fi
+        # ofrp 汉化 fork 删掉了 landscape_hdpi 主题（它只做竖屏机），但本车是 1920x1080 横屏。
+        # 从同分支的官方源恢复该主题目录。
+        git fetch --depth=1 https://github.com/TeamWin/android_bootable_recovery android-12.1
+        git checkout FETCH_HEAD -- gui/theme/landscape_hdpi
+        git add gui/theme/landscape_hdpi
+        git commit -m "restore landscape_hdpi theme (dropped by ofrp fork)" || true
+        if [ ! -f gui/theme/landscape_hdpi/ui.xml ]; then
+          echo "::error::landscape_hdpi/ui.xml still missing"; exit 1
+        fi
+        echo "landscape theme restored: $(wc -c < gui/theme/landscape_hdpi/ui.xml) bytes, $(find gui/theme/landscape_hdpi -type f | wc -l) files"
         # 校验：不允许残留冲突标记
         if grep -rIl -E '^(<<<<<<< |>>>>>>> )' --include='*.cpp' --include='*.h' --include='*.hpp' --include='*.xml' . ; then
           echo "::error::conflict markers still present"; exit 1
         fi
         echo "patch step OK: $(git log --oneline -1)"
-        if [ "${{ inputs.ADD_WLAN_SUPPORT }}" = "true" ]; then
-        wget "https://github.com/ymdzq/OrangeFox_Recovery/commit/f8712872b9ec663b658a1e8eba4840877fe45ea6.patch" -O wlan.patch
-        git am wlan.patch
-        wget "https://github.com/ymdzq/OrangeFox_Recovery/commit/55743730c43681a777c4eacddd9d64a84dce3a54.patch" -O wlan2.patch
-        git am wlan2.patch
-        fi
 
     - name: Add WLAN support For 14.1 Branch
       if: inputs.MANIFEST_BRANCH == '14.1' && inputs.ADD_WLAN_SUPPORT
