@@ -1,14 +1,24 @@
-# AOSP fstab (recovery binary 用) -- BYD DiLink 4.0
-# 动态分区: 源字段写裸名, 这样 TWRP 的 Is_Super_Partition() 才能匹配
+# AOSP fstab (recovery binary 用) -- BYD DiLink 4.0 (lito/SM6350)
+#
+# 动态分区: 源字段必须写裸名(system/vendor/product), 这样 TWRP 的
+# Is_Super_Partition() 才能匹配到 liblp 元数据, 得到 logical 标记。
+#
+# 注意: 实测 super (12,884,901,888 字节) 里只有 3 个逻辑分区:
+#   system_a/_b, vendor_a/_b, product_a/_b
+# lpdump 确认无 odm / system_ext。运行时的 /odm 是 dm-5(system) 的别名,
+# 不是独立分区。故此处不写 odm 行 —— 写了只会让 TWRP 去映射一个
+# 不存在的逻辑分区, 产生无谓错误。
 system      /system      ext4   ro,barrier=1,discard   wait,slotselect,logical
 vendor      /vendor      ext4   ro,barrier=1,discard   wait,slotselect,logical
 product     /product     ext4   ro,barrier=1,discard   wait,slotselect,logical
-odm         /odm         ext4   ro,barrier=1,discard   wait,slotselect,logical
 
+# /data 实测 f2fs (/proc/mounts: userdata /data f2fs), 未加密
+# (ro.crypto.state=unencrypted) -> 绝不能写 encryptable=footer
 /dev/block/by-name/userdata   /data      f2fs  noatime,nosuid,nodev,discard  wait,check
 /dev/block/by-name/metadata   /metadata  ext4  noatime,nosuid,nodev,discard  wait,formattable
 /dev/block/by-name/persist    /persist   ext4  noatime,nosuid,nodev,discard  wait
 
+# 实测节点: boot_a=sde12 recovery_a=sde15 dtbo_a=sde18 vbmeta_a=sde17 misc=sda3
 /dev/block/by-name/boot_a       /boot      emmc  defaults  wait
 /dev/block/by-name/recovery_a   /recovery  emmc  defaults  wait
 /dev/block/by-name/dtbo_a       /dtbo      emmc  defaults  wait
