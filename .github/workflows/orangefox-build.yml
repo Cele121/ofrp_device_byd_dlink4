@@ -76,7 +76,9 @@ jobs:
 
     - name: Build Environment
       run: |
-        sudo apt install aria2 linux-modules-extra-$(uname -r) zram-tools -y
+        # linux-modules-extra 在 7.x-azure runner 上不存在，改成尽力而为
+        sudo apt install aria2 zram-tools -y
+        sudo apt install linux-modules-extra-$(uname -r) -y || echo "::warning::linux-modules-extra not available for $(uname -r), continuing"
         git clone https://gitlab.com/OrangeFox/misc/scripts.git -b master
         cd scripts
         sudo bash setup/android_build_env.sh
@@ -103,7 +105,8 @@ jobs:
 
     - name: Setup zram
       run: |
-        sudo modprobe zram
+        sudo modprobe zram || echo "::warning::zram module unavailable, skipping"
+        if ! lsmod | grep -q '^zram'; then echo "no zram, continue without it"; exit 0; fi
         sudo sed -i 's/^#PERCENT=50/PERCENT=90/' /etc/default/zramswap
         sudo sed -i 's/^#PRIORITY=100/PRIORITY=1000/' /etc/default/zramswap
         sudo systemctl restart zramswap
