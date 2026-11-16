@@ -175,6 +175,19 @@ jobs:
         if grep -rIl -E '^(<<<<<<< |>>>>>>> )' --include='*.cpp' --include='*.h' --include='*.hpp' --include='*.xml' . ; then
           echo "::error::conflict markers still present"; exit 1
         fi
+        # ---- 修 SAR 下 vendor 目录冲突 ----
+        # TWRP 的 bootable/recovery/prebuilt/Android.mk 会生成真实的
+        #   recovery/root/vendor/bin/hw  (HAL 二进制, recovery 必需)
+        # 而 AOSP 的 build-recoveryimage-target 用
+        #   rsync -a --exclude=sdcard $(TARGET_ROOT_OUT) $(TARGET_RECOVERY_OUT)
+        # 把源 root/vendor(符号链接, 指向 /system/vendor) 同步过去,
+        # 遇到非空真实目录无法覆盖 -> code 23, 构建在 99% 中断 (run#7/#8 实测)。
+        # AOSP 那行没有可配变量, 直接补 --exclude=root/vendor 保留真实目录。
+        cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+        sed -i 's|--exclude=sdcard |--exclude=sdcard --exclude=root/vendor |g' build/make/core/Makefile
+        echo "--- rsync 行已打补丁 ---"
+        grep -n 'exclude=root/vendor' build/make/core/Makefile
+        test $(grep -c 'exclude=root/vendor' build/make/core/Makefile) -ge 1 || { echo "::error::rsync patch failed"; exit 1; }
         echo "patch step OK: $(git log --oneline -1)"
 
     - name: Add WLAN support For 14.1 Branch
