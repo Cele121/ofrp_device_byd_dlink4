@@ -1,0 +1,28 @@
+# TWRP fstab -- BYD DiLink 4.0 (lito/SM6350) A/B + super
+# 注意: 不要把 /sdcard 指到 MicroSD (本车无卡槽), 否则和 /data/media 抢挂载点
+system      /system      ext4   ro,barrier=1,discard   wait,slotselect,logical
+vendor      /vendor      ext4   ro,barrier=1,discard   wait,slotselect,logical
+product     /product     ext4   ro,barrier=1,discard   wait,slotselect,logical
+odm         /odm         ext4   ro,barrier=1,discard   wait,slotselect,logical
+
+/data         f2fs   /dev/block/by-name/userdata   flags=display="Data";backup=1;wipeingui
+/metadata     ext4   /dev/block/by-name/metadata   flags=display="Metadata";formattable;backup=1
+/persist      ext4   /dev/block/by-name/persist    flags=display="Persist";backup=1
+
+/boot         emmc   /dev/block/by-name/boot_a     flags=display="Boot";backup=1;flashimg=1
+/recovery     emmc   /dev/block/by-name/recovery_a flags=display="Recovery";backup=1;flashimg=1
+/dtbo         emmc   /dev/block/by-name/dtbo_a     flags=display="DTBO";backup=1;flashimg=1
+/vbmeta       emmc   /dev/block/by-name/vbmeta_a   flags=display="VBMeta";backup=1;flashimg=1
+
+/modem        emmc   /dev/block/by-name/modem_a    flags=display="Modem";backup=1;flashimg=1
+/efs1         emmc   /dev/block/by-name/modemst1   flags=display="EFS1";backup=1;flashimg=1
+/efs2         emmc   /dev/block/by-name/modemst2   flags=display="EFS2";backup=1;flashimg=1
+/fsg          emmc   /dev/block/by-name/fsg        flags=display="FSG";backup=1;flashimg=1
+/fsc          emmc   /dev/block/by-name/fsc        flags=display="FSC";backup=1;flashimg=1
+
+/misc         emmc   /dev/block/by-name/misc       flags=display="Misc"
+/splash       emmc   /dev/block/by-name/splash     flags=display="Splash";backup=1;flashimg=1
+/bluetooth    emmc   /dev/block/by-name/bluetooth_a flags=display="Bluetooth";backup=1;flashimg=1
+
+# USB 读卡器在本车枚举为 sdg; iocharset=utf8 修中文文件名
+/dev/block/sdg1   /usb_otg   vfat   rw,iocharset=utf8,utf8,shortname=mixed   wait
