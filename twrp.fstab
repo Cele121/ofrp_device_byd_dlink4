@@ -1,9 +1,9 @@
 # TWRP fstab -- BYD DiLink 4.0 (lito/SM6350) A/B + super
 # 注意: 不要把 /sdcard 指到 MicroSD (本车无卡槽), 否则和 /data/media 抢挂载点
+# super 实测只有 3 个逻辑分区 (dm-5/4/3 = system/vendor/product), 无 odm
 system      /system      ext4   ro,barrier=1,discard   wait,slotselect,logical
 vendor      /vendor      ext4   ro,barrier=1,discard   wait,slotselect,logical
 product     /product     ext4   ro,barrier=1,discard   wait,slotselect,logical
-odm         /odm         ext4   ro,barrier=1,discard   wait,slotselect,logical
 
 /data         f2fs   /dev/block/by-name/userdata   flags=display="Data";backup=1;wipeingui
 /metadata     ext4   /dev/block/by-name/metadata   flags=display="Metadata";formattable;backup=1
