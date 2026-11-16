@@ -166,10 +166,16 @@ jobs:
         git fetch --depth=1 https://github.com/TeamWin/android_bootable_recovery android-12.1
         git checkout FETCH_HEAD -- gui/theme/landscape_hdpi
         git add gui/theme/landscape_hdpi
-        git commit -m "restore landscape_hdpi theme (dropped by ofrp fork)" || true
-        if [ ! -f gui/theme/landscape_hdpi/ui.xml ]; then
-          echo "::error::landscape_hdpi/ui.xml still missing"; exit 1
-        fi
+        # ui.xml 里有 <include><xmlfile name="landscape.xml"/></include>
+        # 而该文件在 gui/theme/common/ 下, 同样被 fork 删掉了。
+        # 不补它 -> 镜像里 /twres/landscape.xml 缺失 -> 界面加载不出页面。
+        git checkout FETCH_HEAD -- gui/theme/common/landscape.xml
+        git add gui/theme/common/landscape.xml
+        git commit -m "restore landscape_hdpi + common/landscape.xml (dropped by ofrp fork)" || true
+        for f in gui/theme/landscape_hdpi/ui.xml gui/theme/common/landscape.xml; do
+          if [ ! -f "$f" ]; then echo "::error::missing $f"; exit 1; fi
+        done
+        echo "restored: landscape_hdpi $(find gui/theme/landscape_hdpi -type f | wc -l) files, common/landscape.xml $(wc -c < gui/theme/common/landscape.xml) bytes"
         echo "landscape theme restored: $(wc -c < gui/theme/landscape_hdpi/ui.xml) bytes, $(find gui/theme/landscape_hdpi -type f | wc -l) files"
         # 校验：不允许残留冲突标记
         if grep -rIl -E '^(<<<<<<< |>>>>>>> )' --include='*.cpp' --include='*.h' --include='*.hpp' --include='*.xml' . ; then
