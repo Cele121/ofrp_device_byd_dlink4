@@ -18,6 +18,8 @@ TARGET_USES_64_BIT_BINDER := true
 TARGET_NO_KERNEL := true
 BOARD_USES_RECOVERY_AS_BOOT := false
 AB_OTA_UPDATER := true
+# AB_OTA_UPDATER=true 时 Makefile:4906 强制要求此变量, 否则 ckati 直接报错
+AB_OTA_PARTITIONS := boot recovery dtbo vbmeta system vendor product
 # 实测分区大小 (100663296 = 96MB), 用于构建期空间断言
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 100663296
 BOARD_BOOTIMAGE_PARTITION_SIZE := 100663296
@@ -62,6 +64,8 @@ TW_EXCLUDE_TWRPAPP := true
 TW_USE_TOOLBOX := true
 TW_DEVICE_VERSION := dilink4
 TW_DEFAULT_LANGUAGE := zh_CN
+# 只设 TW_DEFAULT_LANGUAGE 不够, 必须开这个才会把 extra-languages/*.xml 装进包
+TW_EXTRA_LANGUAGES := true
 
 # ===== OrangeFox =====
 # TW_INCLUDE_NANO 需要 external/nano 源码, minimal manifest 无 -> 关
