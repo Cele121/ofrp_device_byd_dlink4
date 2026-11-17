@@ -216,6 +216,19 @@ jobs:
             echo "::error::functionfs still active in $INITRC"; exit 1
           fi
         done
+        # ---- 诊断钩子: 启动 25 秒后把 TWRP 日志写到 /data ----
+        # 车机 USB 只有 host 模式, recovery 里拿不到 adb/网络, 只能靠这个把日志带出来。
+        LOGHOOK=bootable/recovery/etc/init.rc
+        if ! grep -q "twrp_log_dump" $LOGHOOK; then
+          cat >> $LOGHOOK <<'LOGHOOK_EOF'
+
+# twrp_log_dump: 把 recovery 日志与内核日志落盘到 /data, 供事后诊断
+on late-init
+    exec - root -- /system/bin/sh -c "sleep 25; cp /tmp/recovery.log /data/media/0/twrp_boot.log 2>/dev/null; dmesg > /data/media/0/twrp_dmesg.txt 2>/dev/null; getprop > /data/media/0/twrp_props.txt 2>/dev/null"
+LOGHOOK_EOF
+          echo "log hook appended"
+        fi
+        grep -A2 "twrp_log_dump" $LOGHOOK | head -5
         echo "patch step OK: $(git log --oneline -1)"
 
     - name: Add WLAN support For 14.1 Branch
