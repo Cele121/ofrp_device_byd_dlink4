@@ -216,6 +216,16 @@ jobs:
             echo "::error::functionfs still active in $INITRC"; exit 1
           fi
         done
+        # ---- 用 v6 实测可用的 1920x1080 主题覆盖上游 1920x1200 版本 ----
+        # 上游 landscape_hdpi 声明 1920x1200, 而本车屏幕是 1920x1080,
+        # TWRP 会按 scale_h=0.9 缩放每一帧 -> 实测表现为界面闪烁、卡住。
+        # v6 主题精确匹配 1920x1080(scale=1.0), 且在该车上显示完全正常。
+        cp device/byd/dilink4/theme/ui.xml        bootable/recovery/gui/theme/landscape_hdpi/ui.xml
+        cp device/byd/dilink4/theme/landscape.xml bootable/recovery/gui/theme/common/landscape.xml
+        echo "--- 主题分辨率校验 ---"
+        grep -o '<resolution width="[0-9]*" height="[0-9]*"/>' bootable/recovery/gui/theme/landscape_hdpi/ui.xml | head -1
+        grep -q 'height="1080"' bootable/recovery/gui/theme/landscape_hdpi/ui.xml || { echo "::error::theme is not 1920x1080"; exit 1; }
+        test -f bootable/recovery/gui/theme/common/landscape.xml || { echo "::error::landscape.xml missing"; exit 1; }
         echo "patch step OK: $(git log --oneline -1)"
 
     - name: Add WLAN support For 14.1 Branch
