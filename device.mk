@@ -22,6 +22,3 @@ PRODUCT_COPY_FILES += \
 # ============ f2fs 用户态工具 ============
 # 模块定义见 device/byd/dilink4/Android.mk (prebuilt, 取自实测可用的 v6 镜像)
 # 缺它们时 /data 仍能挂载(靠内核 f2fs 驱动), 但无法 fsck 修复 / 格式化
-PRODUCT_PACKAGES += \
-    fsck_f2fs_recovery \
-    make_f2fs_recovery
