@@ -37,7 +37,10 @@ TW_INCLUDE_FBE_METADATA_DECRYPT := false
 
 # 动态分区 (super @ sda8, 内含 system/vendor/product)
 TW_INCLUDE_LOGICAL := true
-TW_INCLUDE_FASTBOOTD := true
+# 关闭 fastbootd: 实测刷入本镜像后 recovery 未进图形界面, 而是落到 fastbootd,
+# 且该 fastbootd 不响应任何命令(devices 能枚举, getvar 静默超时)。
+# 本车 USB 只有 host 模式, fastbootd 本无意义, 关掉避免它抢占启动路径。
+TW_INCLUDE_FASTBOOTD := false
 TW_INCLUDE_RESETPROP := true
 TW_INCLUDE_LIBRESETPROP := true
 
