@@ -51,7 +51,10 @@ TW_INCLUDE_LIBRESETPROP := true
 TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 TW_THEME := landscape_hdpi
 TW_SCREEN_BLANK_ON_BOOT := false
+# 两个开关是独立的: NO_SCREEN_TIMEOUT 只跳过超时, NO_SCREEN_BLANK 才禁止熄灭。
+# 之前只设了前者 -> 界面反复黑/亮闪烁 (blankTimer 仍在跑)。
 TW_NO_SCREEN_TIMEOUT := true
+TW_NO_SCREEN_BLANK := true
 TW_BRIGHTNESS_PATH := /sys/class/backlight/panel0-backlight/brightness
 TW_MAX_BRIGHTNESS := 255
 TW_DEFAULT_BRIGHTNESS := 110
