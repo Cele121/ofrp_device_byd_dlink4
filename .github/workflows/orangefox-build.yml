@@ -189,6 +189,20 @@ jobs:
         if grep -rIl -E '^(<<<<<<< |>>>>>>> )' --include='*.cpp' --include='*.h' --include='*.hpp' --include='*.xml' . ; then
           echo "::error::conflict markers still present"; exit 1
         fi
+        # ---- 单缓冲补丁: 消除 DRM 平面翻转导致的黑帧闪烁 ----
+        # minuitwrp/graphics_drm.cpp 的 drm_flip() 每帧在两块 dumb buffer 间切换:
+        #     current_buffer = 1 - current_buffer;
+        # 这块 lito 面板对该翻转处理不好 -> 界面黑一帧亮一帧 (实测 v19/v21/v23 均如此)。
+        # 改为永远使用 buffer 0 (单缓冲), 不再翻转。
+        DRMCPP=minuitwrp/graphics_drm.cpp
+        if [ -f "$DRMCPP" ]; then
+          sed -i 's/^    current_buffer = 1 - current_buffer;/    current_buffer = 0; \/* single-buffer patch: avoid flip black frames *\//' "$DRMCPP"
+          echo "--- 单缓冲补丁后的 drm_flip ---"
+          grep -A5 "^static GRSurface\* drm_flip" "$DRMCPP" | head -8
+          grep -q "single-buffer patch" "$DRMCPP" || { echo "::error::drm single-buffer patch failed"; exit 1; }
+        else
+          echo "::error::$DRMCPP not found"; exit 1
+        fi
         # ---- 修 SAR 下 vendor 目录冲突 ----
         # TWRP 的 bootable/recovery/prebuilt/Android.mk 会生成真实的
         #   recovery/root/vendor/bin/hw  (HAL 二进制, recovery 必需)
