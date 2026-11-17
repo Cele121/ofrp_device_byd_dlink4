@@ -250,7 +250,7 @@ jobs:
         cp "$DT/theme/landscape.xml" bootable/recovery/gui/theme/common/landscape.xml
         echo "--- 主题分辨率校验 ---"
         grep -o '<resolution width="[0-9]*" height="[0-9]*"/>' bootable/recovery/gui/theme/landscape_hdpi/ui.xml | head -1
-        grep -q 'height=\"1080\"' bootable/recovery/gui/theme/landscape_hdpi/ui.xml || { echo "::error::theme is not 1920x1080"; exit 1; }
+        grep -q 'height="1080"' bootable/recovery/gui/theme/landscape_hdpi/ui.xml || { echo "::error::theme is not 1920x1080"; exit 1; }
         echo "theme ok: $(wc -c < bootable/recovery/gui/theme/common/landscape.xml) bytes landscape.xml"
         set +e
         export FOX_BUILD_DEVICE=${{ inputs.DEVICE_NAME }}
