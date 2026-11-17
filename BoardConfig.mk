@@ -45,7 +45,10 @@ TW_INCLUDE_RESETPROP := true
 TW_INCLUDE_LIBRESETPROP := true
 
 # 显示: 无 /dev/fb0, 只走 DRM (3.6+ 原生支持, 不需要移植者的 libfbdrm 垫片)
-TARGET_RECOVERY_PIXEL_FORMAT := "RGBA_8888"
+# 实测: RGBA_8888 在这块 DRM 屏上会导致 setPlane 失败 -> 背光亮但全黑。
+# 已验证可正常显示的 v6 镜像用的是 RGBX_8888 (ro.minui.pixel_format=RGBX_8888),
+# 这里对齐。minui 映射: RGBA_8888->ABGR8888, RGBX_8888->XBGR8888。
+TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
 TW_THEME := landscape_hdpi
 TW_SCREEN_BLANK_ON_BOOT := false
 TW_NO_SCREEN_TIMEOUT := true
