@@ -134,7 +134,11 @@ jobs:
         # 而 OFRP 的主题变量体系不支持横屏主题 -> 主题解析卡死(实测)。
         # 不删除该 project 行, repo sync 就会拉 TWRP 官方源码(含 landscape_hdpi 主题),
         # 二进制/主题/变量三者同源, 与 v6 移植版一致。
-        repo sync
+        # 注意: OrangeFox sync 已把 bootable/recovery 克隆成 OFRP 且处于特殊 checkout 状态,
+        # 直接 repo sync 会报 "unsupported checkout state" (run#26 实测), 必须先删掉。
+        CMD="rm -rf"
+        $CMD ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/bootable/recovery
+        repo sync -j8 --force-sync bootable/recovery
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/bionic/
         wget "https://github.com/adontoo/OrangeFox-android_platform_bionic/commit/85b1a7100083006927376f30bb8a67885c6dd71f.patch" -O bionic.patch
         git am bionic.patch
