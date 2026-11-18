@@ -301,11 +301,13 @@ jobs:
         # ---- 主题分辨率改成 1920x1080 (与屏幕一致 -> scale=1.0, 不进缩放分支) ----
         # 上游 landscape_hdpi 声明 1920x1200; 实测缩放会算错(日志出现 0.5625x=1080/1920)
         # 导致页面坐标错位 / 崩溃。改成 1080 后不再缩放, 与 v6 移植版条件一致。
-        UI=bootable/recovery/gui/theme/landscape_hdpi/ui.xml
-        sed -i 's|<resolution width="1920" height="1200"/>|<resolution width="1920" height="1080"/>|' $UI
-        echo "--- 主题分辨率(改后) ---"
-        grep -o '<resolution width="[0-9]*" height="[0-9]*"/>' $UI | head -1
-        grep -q 'height="1080"' $UI || { echo "::error::theme resolution patch failed"; exit 1; }
+        # 用设备树里的 v6 主题 (1920x1080 原生布局, 导航栏在屏幕内)
+        # 上游主题是 1200 设计, 改分辨率不换布局会导致底部导航栏出屏
+        cp "$DT/theme/ui.xml"        bootable/recovery/gui/theme/landscape_hdpi/ui.xml
+        cp "$DT/theme/landscape.xml" bootable/recovery/gui/theme/common/landscape.xml
+        echo "--- 主题分辨率 ---"
+        grep -o '<resolution width="[0-9]*" height="[0-9]*"/>' bootable/recovery/gui/theme/landscape_hdpi/ui.xml | head -1
+        grep -q 'height="1080"' bootable/recovery/gui/theme/landscape_hdpi/ui.xml || { echo "::error::theme not 1080"; exit 1; }
         set +e
         export FOX_BUILD_DEVICE=${{ inputs.DEVICE_NAME }}
         if [[ ${{ inputs.USE_CCACHE }} == true ]]; then
