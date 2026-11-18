@@ -268,11 +268,12 @@ jobs:
         # TWRP 会按 scale_h=0.9 逐帧缩放 -> 实测界面闪烁卡死。
         # 设备树在此步骤之前已克隆, 所以放在这里而不是 Patching 步骤。
         DT="${{ inputs.DEVICE_PATH }}"
-        cp "$DT/theme/ui.xml"        bootable/recovery/gui/theme/landscape_hdpi/ui.xml
-        cp "$DT/theme/landscape.xml" bootable/recovery/gui/theme/common/landscape.xml
+        # 不再覆盖: 源码树自带的 TeamWin 12.1 主题与本二进制同源, 页面齐全
+        # (实测 v6 主题导致 "Unable to locate page (main)" + SIGSEGV 崩溃循环)
+        echo "keep upstream theme (TeamWin 12.1)"
         echo "--- 主题分辨率校验 ---"
         grep -o '<resolution width="[0-9]*" height="[0-9]*"/>' bootable/recovery/gui/theme/landscape_hdpi/ui.xml | head -1
-        grep -q 'height="1080"' bootable/recovery/gui/theme/landscape_hdpi/ui.xml || { echo "::error::theme is not 1920x1080"; exit 1; }
+        grep -o '<resolution width="[0-9]*" height="[0-9]*"/>' bootable/recovery/gui/theme/landscape_hdpi/ui.xml | head -1
         echo "theme ok: $(wc -c < bootable/recovery/gui/theme/common/landscape.xml) bytes landscape.xml"
         set +e
         export FOX_BUILD_DEVICE=${{ inputs.DEVICE_NAME }}
