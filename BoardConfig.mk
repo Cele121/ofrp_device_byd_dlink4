@@ -64,7 +64,9 @@ TW_NO_VIBRATOR := true
 
 # 存储
 RECOVERY_SDCARD_ON_DATA := true
-TW_INTERNAL_STORAGE_PATH := "/data/media"
+# 关键: 必须是 /data/media/0 (多用户模拟存储的实际目录)
+# 写 /data/media 会让 TWRP 指向只含 "0" 和 "TWRP" 的父目录 -> 内置存储显示为空
+TW_INTERNAL_STORAGE_PATH := "/data/media/0"
 TW_INTERNAL_STORAGE_MOUNT_POINT := "data"
 TW_EXTERNAL_STORAGE_PATH := "/usb_otg"
 TW_EXTERNAL_STORAGE_MOUNT_POINT := "usb_otg"
@@ -73,6 +75,8 @@ TW_EXCLUDE_TWRPAPP := true
 TW_USE_TOOLBOX := true
 TW_DEVICE_VERSION := dilink4
 TW_DEFAULT_LANGUAGE := zh_CN
+# 北京时区 (CST-8); 否则默认 UTC
+TW_TIME_ZONE := CST-8
 # 只设 TW_DEFAULT_LANGUAGE 不够, 必须开这个才会把 extra-languages/*.xml 装进包
 TW_EXTRA_LANGUAGES := true
 
