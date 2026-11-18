@@ -144,6 +144,9 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/bootable/recovery
         git config user.email "ci@local" && git config user.name "ci"
+        # 纯 TWRP 模式: 跳过 OrangeFox 汉化分支合并 (OFRP 主题体系不支持横屏,
+        # 实测导致主题变量解析卡死; 改用 TWRP 官方源码+官方主题, 三者同源)
+        if [ "${MERGE_FOX_FORK:-0}" = "1" ]; then
         git remote remove ymdzq 2>/dev/null || true
         git remote add ymdzq https://github.com/ymdzq/OrangeFox_Recovery
         git fetch ymdzq fox_12.1
@@ -160,6 +163,7 @@ jobs:
           done
           git add -A
           git commit -m "Apply custom patches (xml=theirs, cpp=ours)" || true
+        fi
         fi
         # ofrp 汉化 fork 删掉了 landscape_hdpi 主题（它只做竖屏机），但本车是 1920x1080 横屏。
         # 从同分支的官方源恢复该主题目录。
