@@ -211,11 +211,12 @@ jobs:
         # 但我们把 bootable/recovery 换成了 TWRP 官方源码(无此文件),
         # dumpvars 因此失败 -> "Don't have a product spec" (run#28 实测)。
         # 建一个空的 soong.mk 占位即可: 纯 TWRP 不需要 OFRP 的 soong 规则。
-        if [ ! -f bootable/recovery/orangefox_soong.mk ]; then
-          echo "# placeholder: pure TWRP build, OFRP soong rules not needed" > bootable/recovery/orangefox_soong.mk
+        # 注意 cwd: 本步骤开头已 cd 到 bootable/recovery, 用裸文件名
+        if [ ! -f orangefox_soong.mk ]; then
+          echo "# placeholder: pure TWRP build, OFRP soong rules not needed" > orangefox_soong.mk
           echo "created empty orangefox_soong.mk"
         fi
-        ls -l bootable/recovery/orangefox_soong.mk
+        ls -l orangefox_soong.mk
         # ---- 单缓冲补丁: 消除 DRM 平面翻转导致的黑帧闪烁 ----
         # minuitwrp/graphics_drm.cpp 的 drm_flip() 每帧在两块 dumb buffer 间切换:
         #     current_buffer = 1 - current_buffer;
