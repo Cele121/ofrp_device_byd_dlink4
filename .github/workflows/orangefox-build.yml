@@ -327,12 +327,15 @@ jobs:
         set -e
         OUT=OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}
         echo "--- $OUT ---"; ls -l "$OUT" | head -40 || true
-        if ! ls "$OUT"/OrangeFox*.img >/dev/null 2>&1; then
-          echo "::error::recovery image NOT produced - OFRP packaged an empty zip. Check BUILDING_RECOVERY_IMAGE."
+        # 纯 TWRP 产物叫 recovery.img; OrangeFox 版叫 OrangeFox-*.img
+        IMG=$(ls "$OUT"/recovery.img "$OUT"/OrangeFox*.img 2>/dev/null | head -1)
+        if [ -z "$IMG" ]; then
+          echo "::error::recovery image NOT produced"
           exit 1
         fi
-        md5sum "$OUT"/OrangeFox*.img
-        stat -c '%n %s bytes' "$OUT"/OrangeFox*.img
+        echo "IMAGE: $IMG"
+        md5sum "$IMG"
+        stat -c '%n %s bytes' "$IMG"
 
     - name: Set Release Properties
       run: |
@@ -349,6 +352,7 @@ jobs:
       uses: softprops/action-gh-release@master
       with:
         files: |
+          OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/recovery.img
           OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/OrangeFox*.img
           OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/OrangeFox*.zip
         name: OrangeFox Recovery for ${{ inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
