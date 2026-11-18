@@ -205,6 +205,17 @@ jobs:
         if grep -rIl -E '^(<<<<<<< |>>>>>>> )' --include='*.cpp' --include='*.h' --include='*.hpp' --include='*.xml' . ; then
           echo "::error::conflict markers still present"; exit 1
         fi
+        # ---- 补齐 OrangeFox vendor 期望的文件 ----
+        # vendor/twrp/config/BoardConfigSoong.mk 里无条件 include
+        #     bootable/recovery/orangefox_soong.mk
+        # 但我们把 bootable/recovery 换成了 TWRP 官方源码(无此文件),
+        # dumpvars 因此失败 -> "Don't have a product spec" (run#28 实测)。
+        # 建一个空的 soong.mk 占位即可: 纯 TWRP 不需要 OFRP 的 soong 规则。
+        if [ ! -f bootable/recovery/orangefox_soong.mk ]; then
+          echo "# placeholder: pure TWRP build, OFRP soong rules not needed" > bootable/recovery/orangefox_soong.mk
+          echo "created empty orangefox_soong.mk"
+        fi
+        ls -l bootable/recovery/orangefox_soong.mk
         # ---- 单缓冲补丁: 消除 DRM 平面翻转导致的黑帧闪烁 ----
         # minuitwrp/graphics_drm.cpp 的 drm_flip() 每帧在两块 dumb buffer 间切换:
         #     current_buffer = 1 - current_buffer;
